@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+pandas
+matplotlib
+reportlab
+openai
+python-multipart
+flask
+flask_cors
+fpdf
