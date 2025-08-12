@@ -8,3 +8,6 @@ python-multipart
 flask
 flask_cors
 fpdf
+pandas
+seaborn
+python-dateutil
