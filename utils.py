@@ -1,10 +1,9 @@
-# backend/app/utils.py
 import os
 import json
 import math
 import pandas as pd
 import matplotlib
-matplotlib.use("Agg")  # IMPORTANT: headless backend for servers
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 from io import BytesIO
@@ -303,9 +302,9 @@ def generate_charts(df, output_dir):
 
 
 def safe_filename(s):
-    # basic filename sanitizer
     keep = "-_.() %s%s" % (string.ascii_letters, string.digits)
     return "".join(c for c in s if c in keep).replace(" ", "_")[:100]
+
 
 # -------------------------
 # GPT summary (plain text)
@@ -350,15 +349,15 @@ def call_gpt_summary(metrics):
 # -------------------------
 # PDF builder (embeds charts)
 # -------------------------
-def build_pdf(agent_name, week_label, metrics, charts, summary_text, output_path):
+def build_pdf(report_title, week_label, metrics, charts, summary_text, output_path):
     """Build PDF with summary and charts."""
     styles = getSampleStyleSheet()
     doc = SimpleDocTemplate(output_path, pagesize=A4)
     story = []
 
-    # Title
-    title = f"Data Analysis Report - {agent_name} - {week_label}"
-    story.append(Paragraph(title, styles["Title"]))
+    # Title — use report_title instead of agent_name
+    title_text = f"{report_title} - {week_label}"
+    story.append(Paragraph(title_text, styles["Title"]))
     story.append(Spacer(1, 0.2 * inch))
 
     # Summary Section
@@ -368,14 +367,16 @@ def build_pdf(agent_name, week_label, metrics, charts, summary_text, output_path
 
     # Dataset Metrics Section
     story.append(Paragraph("<b>Dataset Overview</b>", styles["Heading2"]))
-    story.append(Paragraph(f"Rows: {metrics['rows']}", styles["Normal"]))
-    story.append(Paragraph(f"Columns: {metrics['columns']}", styles["Normal"]))
+    story.append(Paragraph(f"Rows: {metrics.get('rows', 'N/A')}", styles["Normal"]))
+    cols = metrics.get('columns', [])
+    story.append(Paragraph(f"Columns: {', '.join(cols) if cols else 'N/A'}", styles["Normal"]))
     story.append(Spacer(1, 0.3 * inch))
 
     # Charts Section
     if charts:
         story.append(Paragraph("<b>Visualizations</b>", styles["Heading2"]))
-        for chart_path in charts:
+        for chart in charts:
+            chart_path = chart.get("file") if isinstance(chart, dict) else chart
             try:
                 story.append(Image(chart_path, width=5.5 * inch, height=3.5 * inch))
                 story.append(Spacer(1, 0.3 * inch))
@@ -383,6 +384,7 @@ def build_pdf(agent_name, week_label, metrics, charts, summary_text, output_path
                 print(f"[build_pdf] Could not add chart {chart_path}: {e}")
 
     doc.build(story)
+
 
 
 
